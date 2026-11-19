@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MzanziSave V2 | Try our live grocery-savings app</title>
+  <meta name="description" content="Try MzanziSave V2, the free grocery app that shows the real final price of your basket at every store near you, travel included." />
+  <meta name="theme-color" content="#090D16" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='1' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%2310B981'/%3E%3Cstop offset='1' stop-color='%2300F0FF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='%23090D16'/%3E%3Cpath d='M7 23V10l9 8 9-8v13' fill='none' stroke='url(%23g)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            midnight: { DEFAULT: '#090D16', 900: '#090D16', 800: '#0E1422', 700: '#141B2D' },
+            cyan: { glow: '#00F0FF' },
+            emerald: { glow: '#10B981' },
+          },
+          boxShadow: {
+            glow: '0 0 0 1px rgba(0,240,255,.25), 0 8px 40px -8px rgba(0,240,255,.45)',
+            'glow-em': '0 0 0 1px rgba(16,185,129,.25), 0 8px 40px -8px rgba(16,185,129,.45)',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    body { background:#090D16; }
+    .glass {
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    }
+    .text-gradient {
+      background: linear-gradient(90deg, #00F0FF 0%, #10B981 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 30%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 30%, transparent 75%);
+    }
+    .reveal { opacity:0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.in { opacity:1; transform:none; }
+
+    /* Toggle switch */
+    .switch { position:relative; width:44px; height:24px; flex-shrink:0; }
+    .switch input { position:absolute; inset:0; opacity:0; cursor:pointer; z-index:1; }
+    .switch span { position:absolute; inset:0; border-radius:9999px; background:rgba(255,255,255,.12); transition:background .2s; }
+    .switch span::after { content:""; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:9999px; background:#fff; transition:transform .2s; }
+    .switch input:checked + span { background:#10B981; }
+    .switch input:checked + span::after { transform:translateX(20px); }
+    .switch input:focus-visible + span { outline:2px solid #00F0FF; outline-offset:2px; }
+
+    /* Range slider */
+    input[type=range] { -webkit-appearance:none; appearance:none; height:6px; border-radius:9999px; background:rgba(255,255,255,.12); outline:none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:9999px; background:#00F0FF; box-shadow:0 0 0 4px rgba(0,240,255,.2); cursor:pointer; }
+    input[type=range]::-moz-range-thumb { width:20px; height:20px; border:0; border-radius:9999px; background:#00F0FF; box-shadow:0 0 0 4px rgba(0,240,255,.2); cursor:pointer; }
+    input[type=checkbox].tick { accent-color:#10B981; width:16px; height:16px; }
+
+    .seg button[aria-pressed="true"] { background:#fff; color:#090D16; }
+    .rank-card { transition: transform .45s cubic-bezier(.2,.8,.2,1), border-color .3s, background .3s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior:auto; }
+      .reveal { opacity:1; transform:none; transition:none; }
+      .rank-card { transition:none; }
+    }
+  </style>
+</head>
+
+<body class="font-sans text-white antialiased selection:bg-cyan-glow/30 overflow-x-hidden">
+
+  <!-- ============ NAVBAR ============ -->
+  <header id="nav" class="fixed inset-x-0 top-0 z-50 transition-all duration-300">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 h-16 lg:h-[72px]">
+      <a href="index.html" class="flex items-center gap-2.5 group" aria-label="MzanziSave home">
+        <svg class="h-8 w-8 transition-transform duration-300 group-hover:rotate-[-6deg]" viewBox="0 0 32 32" aria-hidden="true">
+          <defs><linearGradient id="lg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#10B981"/><stop offset="1" stop-color="#00F0FF"/></linearGradient></defs>
+          <rect width="32" height="32" rx="8" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.1)"/>
+          <path d="M7 23V10l9 8 9-8v13" fill="none" stroke="url(#lg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="text-[17px] font-bold tracking-tight">Mzanzi<span class="text-gradient">Save</span></span>
+      </a>
+
+      <div class="hidden md:flex items-center gap-1 rounded-full glass px-1.5 py-1.5">
+        <a href="index.html#services" class="rounded-full px-4 py-1.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition">Services</a>
+        <a href="index.html#approach" class="rounded-full px-4 py-1.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition">Approach</a>
+        <a href="index.html#value" class="rounded-full px-4 py-1.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition">Value</a>
+        <a href="app.html" aria-current="page" class="rounded-full px-4 py-1.5 text-sm text-white bg-white/10 transition">Our App</a>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href="index.html#contact" class="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-midnight transition hover:bg-cyan-glow hover:shadow-glow">
+          Get Started
+          <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.64l-3.22-3.22a.75.75 0 1 1 1.06-1.06l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 1 1-1.06-1.06l3.22-3.22H3.75A.75.75 0 0 1 3 10Z" clip-rule="evenodd"/></svg>
+        </a>
+        <button id="menuBtn" class="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-full glass" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+          <svg id="iconOpen" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          <svg id="iconClose" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+    </nav>
+    <div id="mobileMenu" class="md:hidden hidden px-4 pb-4">
+      <div class="glass rounded-2xl p-2 flex flex-col">
+        <a href="index.html#services" class="rounded-xl px-4 py-3 text-white/80 hover:bg-white/5">Services</a>
+        <a href="index.html#approach" class="rounded-xl px-4 py-3 text-white/80 hover:bg-white/5">Approach</a>
+        <a href="index.html#value" class="rounded-xl px-4 py-3 text-white/80 hover:bg-white/5">Value</a>
+        <a href="app.html" class="rounded-xl px-4 py-3 text-white bg-white/5">Our App</a>
+        <a href="index.html#contact" class="mt-1 rounded-xl bg-white px-4 py-3 text-center font-semibold text-midnight">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ HERO + LIVE APP ============ -->
+    <section class="relative pt-28 pb-20 lg:pt-36 lg:pb-28">
+      <div class="absolute inset-0 grid-bg pointer-events-none" aria-hidden="true"></div>
+      <div class="absolute -top-40 left-1/2 -translate-x-1/2 h-[520px] w-[820px] max-w-full rounded-full bg-emerald-glow/15 blur-[120px] pointer-events-none" aria-hidden="true"></div>
+
+      <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid lg:grid-cols-[1.1fr_1fr] gap-14 items-center">
+        <div class="reveal">
+          <span class="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-xs font-medium text-white/80">
+            <span class="h-2 w-2 rounded-full bg-emerald-glow"></span> Our own product · V2 is live
+          </span>
+          <h1 class="mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] tracking-[-0.03em]">
+            One honest number<br class="hidden sm:block" /> for the <span class="text-gradient">whole basket.</span>
+          </h1>
+          <p class="mt-6 max-w-xl text-base sm:text-lg leading-relaxed text-white/60">
+            MzanziSave V2 is a free grocery app that adds up shelf prices, specials, loyalty prices, coupons and the trip, then ranks every store near you by what you'll really pay. We designed, built and run it, and you can try it right here.
+          </p>
+
+          <ul class="mt-8 grid sm:grid-cols-2 gap-3 text-sm">
+            <li class="glass rounded-2xl p-4"><p class="font-semibold">Real final price</p><p class="mt-1 text-white/55">Taxi fare or fuel included in every comparison.</p></li>
+            <li class="glass rounded-2xl p-4"><p class="font-semibold">Price freshness</p><p class="mt-1 text-white/55">Every price shows when it was last checked.</p></li>
+            <li class="glass rounded-2xl p-4"><p class="font-semibold">Works offline</p><p class="mt-1 text-white/55">Under 120 KB, with coupons and cards at the till.</p></li>
+            <li class="glass rounded-2xl p-4"><p class="font-semibold">Stokvel calculator</p><p class="mt-1 text-white/55">Split bulk combos between 2 and 12 members.</p></li>
+          </ul>
+
+          <div class="mt-9 flex flex-col sm:flex-row gap-3">
+            <a href="https://mzanzisave.mshandu0525.workers.dev/" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 rounded-full bg-cyan-glow px-6 py-3.5 text-sm font-semibold text-midnight shadow-glow transition hover:-translate-y-0.5 hover:brightness-110">
+              Open the full app
+              <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M11 3a1 1 0 1 0 0 2h2.59l-6.3 6.29a1 1 0 1 0 1.42 1.42L15 6.41V9a1 1 0 1 0 2 0V4a1 1 0 0 0-1-1h-5Z"/><path d="M5 5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3a1 1 0 1 0-2 0v3H5V7h3a1 1 0 0 0 0-2H5Z"/></svg>
+            </a>
+            <a href="#builder" class="inline-flex items-center justify-center gap-2 rounded-full glass px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10">
+              See how the price is worked out
+            </a>
+          </div>
+        </div>
+
+        <!-- Live app in a phone frame -->
+        <div class="reveal relative">
+          <div class="absolute inset-0 -z-10 mx-auto h-[80%] w-[70%] translate-y-[10%] rounded-full bg-gradient-to-tr from-emerald-glow/30 to-cyan-glow/25 blur-[90px]" aria-hidden="true"></div>
+          <div class="mx-auto w-full max-w-[340px]">
+            <div class="rounded-[48px] bg-gradient-to-b from-white/25 to-white/5 p-[3px] shadow-2xl shadow-black/60">
+              <div class="rounded-[45px] bg-[#05070C] p-2.5">
+                <div class="relative overflow-hidden rounded-[36px] bg-white h-[640px] sm:h-[680px]">
+                  <img id="appPoster" src="assets/mzanzisave-app.webp" alt="" class="absolute inset-0 h-full w-full object-cover object-top" />
+                  <iframe id="appFrame" title="MzanziSave V2 live app" src="https://mzanzisave.mshandu0525.workers.dev/" loading="lazy"
+                    class="relative block h-full w-full border-0 bg-transparent opacity-0 transition-opacity duration-500"
+                    allow="geolocation; camera; clipboard-write"></iframe>
+                </div>
+              </div>
+            </div>
+            <p class="mt-4 text-center text-xs text-white/45">This is the real app running live. Scroll, tap and build a basket.<br />Prices are realistic sample estimates in this version.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ INTERACTIVE FINAL-PRICE BUILDER ============ -->
+    <section id="builder" class="relative py-24 lg:py-32 scroll-mt-16 border-t border-white/5">
+      <div class="absolute right-0 top-1/4 h-[360px] w-[360px] rounded-full bg-cyan-glow/10 blur-[120px] pointer-events-none" aria-hidden="true"></div>
+      <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="max-w-2xl reveal">
+          <p class="text-sm font-semibold text-cyan-glow">Try the logic</p>
+          <h2 class="mt-3 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">The cheapest shelf isn't always the cheapest shop.</h2>
+          <p class="mt-4 text-white/60 text-lg">Change the basket, the savings and how you travel, and watch the stores re-rank. This is the calculation at the heart of MzanziSave V2.</p>
+        </div>
+
+        <div class="mt-12 grid lg:grid-cols-[1fr_1.15fr] gap-5">
+          <!-- Controls -->
+          <div class="reveal glass rounded-3xl p-6 sm:p-7 space-y-7">
+            <div>
+              <div class="flex items-center justify-between">
+                <h3 class="font-semibold">1. Your month-end basket</h3>
+                <span id="itemCount" class="text-xs text-white/50"></span>
+              </div>
+              <ul id="basket" class="mt-4 grid sm:grid-cols-2 gap-2 text-sm"></ul>
+            </div>
+
+            <div>
+              <h3 class="font-semibold">2. Savings to count</h3>
+              <div class="mt-4 space-y-3 text-sm">
+                <label class="flex items-center justify-between gap-4"><span><span class="text-white/90">Specials</span><span class="block text-xs text-white/45">This week's promotions</span></span><span class="switch"><input type="checkbox" id="optSpecials" checked /><span></span></span></label>
+                <label class="flex items-center justify-between gap-4"><span><span class="text-white/90">Loyalty-card prices</span><span class="block text-xs text-white/45">Member prices at stores that offer them</span></span><span class="switch"><input type="checkbox" id="optLoyalty" checked /><span></span></span></label>
+                <label class="flex items-center justify-between gap-4"><span><span class="text-white/90">Clipped coupons</span><span class="block text-xs text-white/45">Brand coupons, accepted at most stores</span></span><span class="switch"><input type="checkbox" id="optCoupons" checked /><span></span></span></label>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="font-semibold">3. How you get there</h3>
+              <div class="seg mt-4 grid grid-cols-3 gap-1 rounded-full bg-white/5 p-1 text-sm" role="group" aria-label="Travel mode">
+                <button type="button" data-mode="walk" class="rounded-full py-2 font-medium text-white/70 transition hover:text-white">🚶 Walk</button>
+                <button type="button" data-mode="taxi" aria-pressed="true" class="rounded-full py-2 font-medium text-white/70 transition hover:text-white">🚐 Taxi</button>
+                <button type="button" data-mode="car" class="rounded-full py-2 font-medium text-white/70 transition hover:text-white">🚗 Car</button>
+              </div>
+              <div id="taxiCtl" class="mt-5">
+                <div class="flex justify-between text-sm"><label for="taxiFare" class="text-white/70">Taxi fare, each way</label><span id="taxiOut" class="font-semibold text-cyan-glow"></span></div>
+                <input id="taxiFare" type="range" min="10" max="35" step="1" value="18" class="mt-3 w-full" />
+              </div>
+              <div id="carCtl" class="mt-5 hidden">
+                <div class="flex justify-between text-sm"><label for="carCost" class="text-white/70">Car cost per km</label><span id="carOut" class="font-semibold text-cyan-glow"></span></div>
+                <input id="carCost" type="range" min="2" max="8" step="0.1" value="4.3" class="mt-3 w-full" />
+              </div>
+              <p id="walkNote" class="mt-5 hidden text-sm text-white/55">Walking is free, but stores further than 1.5 km are marked as a long walk with heavy bags.</p>
+            </div>
+          </div>
+
+          <!-- Results -->
+          <div class="reveal space-y-5">
+            <div id="ranking" class="relative" aria-live="polite"></div>
+
+            <div class="glass rounded-3xl p-6 sm:p-7">
+              <div class="flex items-center justify-between gap-3">
+                <h3 class="font-semibold">Final price at <span id="bdStore" class="text-cyan-glow"></span></h3>
+                <span class="rounded-full bg-white/5 px-2.5 py-1 text-[11px] text-white/50">Tap a store to compare</span>
+              </div>
+              <dl id="breakdown" class="mt-5 space-y-3 text-sm"></dl>
+              <div class="mt-5 border-t border-white/10 pt-5 flex items-end justify-between">
+                <span class="text-white/70">You pay</span>
+                <span id="bdFinal" class="text-3xl font-extrabold tracking-tight"></span>
+              </div>
+            </div>
+            <p class="text-xs text-white/40">Sample prices and stores for illustration only. The live app uses real store distances and prices checked by shoppers and retailers.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section class="relative py-24 border-t border-white/5">
+      <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center reveal">
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight">Want an app like this for your business?</h2>
+        <p class="mt-4 text-white/60 text-lg">The same team that built MzanziSave V2 builds fast, data-light apps and automation for South African companies.</p>
+        <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+          <a href="index.html#contact" class="inline-flex items-center justify-center gap-2 rounded-full bg-cyan-glow px-6 py-3.5 text-sm font-semibold text-midnight shadow-glow transition hover:-translate-y-0.5 hover:brightness-110">Book a Free Consultation</a>
+          <a href="index.html#services" class="inline-flex items-center justify-center rounded-full glass px-6 py-3.5 text-sm font-semibold transition hover:-translate-y-0.5 hover:bg-white/10">Explore Services</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="border-t border-white/5">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid gap-10 md:grid-cols-[1.5fr_1fr_1fr]">
+      <div>
+        <a href="index.html" class="flex items-center gap-2.5">
+          <svg class="h-7 w-7" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.1)"/><path d="M7 23V10l9 8 9-8v13" fill="none" stroke="url(#lg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="font-bold tracking-tight">Mzanzi<span class="text-gradient">Save</span></span>
+        </a>
+        <p class="mt-4 max-w-xs text-sm text-white/50">Apps, websites and automation that drive measurable value for South African businesses.</p>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold text-white/90">Quick links</h4>
+        <ul class="mt-4 space-y-2.5 text-sm text-white/50">
+          <li><a href="index.html#services" class="hover:text-cyan-glow transition">Services</a></li>
+          <li><a href="index.html#approach" class="hover:text-cyan-glow transition">Approach</a></li>
+          <li><a href="index.html#value" class="hover:text-cyan-glow transition">Value</a></li>
+          <li><a href="app.html" class="hover:text-cyan-glow transition">Our App</a></li>
+          <li><a href="index.html#contact" class="hover:text-cyan-glow transition">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-sm font-semibold text-white/90">Contact</h4>
+        <ul class="mt-4 space-y-2.5 text-sm text-white/50">
+          <li><a href="mailto:mnqobishandu@gmail.com" class="hover:text-cyan-glow transition break-all">mnqobishandu@gmail.com</a></li>
+          <li><a href="tel:+27730652421" class="hover:text-cyan-glow transition">073 065 2421</a></li>
+          <li>Bellville Road, Malvern<br />Queensburgh, KZN 4093</li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/5">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row gap-2 justify-between text-xs text-white/40">
+        <p>© <span id="year">2026</span> MzanziSave (Pty) Ltd · Reg. 2026/928892/07</p>
+        <p>B-BBEE Level 1 Contributor · Made in Mzansi 🇿🇦</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ---- Nav ----
+    const nav = document.getElementById('nav');
+    const onScroll = () => {
+      const s = window.scrollY > 12;
+      ['bg-[#090D16]/75','backdrop-blur-xl','border-b','border-white/5'].forEach(c => nav.classList.toggle(c, s));
+    };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
+    const btn = document.getElementById('menuBtn'), menu = document.getElementById('mobileMenu');
+    btn.addEventListener('click', () => {
+      const open = menu.classList.contains('hidden');
+      menu.classList.toggle('hidden', !open);
+      btn.setAttribute('aria-expanded', open);
+      document.getElementById('iconOpen').classList.toggle('hidden', open);
+      document.getElementById('iconClose').classList.toggle('hidden', !open);
+      if (open) nav.classList.add('bg-[#090D16]/90', 'backdrop-blur-xl');
+    });
+
+    // ---- Reveal ----
+    const rev = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); rev.unobserve(e.target); } }), { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 3) * 80 + 'ms'; rev.observe(el); });
+
+    // ---- Live app: fade in over the poster once loaded ----
+    const frame = document.getElementById('appFrame');
+    frame.addEventListener('load', () => {
+      frame.classList.remove('opacity-0');
+      setTimeout(() => document.getElementById('appPoster').remove(), 600);
+    });
+
+    // ---- Final-price builder (sample data) ----
+    const ITEMS = [
+      { id:'maize',  name:'Maize meal 10 kg',        shelf:109.99, coupon:0 },
+      { id:'rice',   name:'Rice 2 kg',               shelf:42.99,  coupon:0 },
+      { id:'oil',    name:'Sunflower oil 2 L',       shelf:50.99,  coupon:5 },
+      { id:'sugar',  name:'Sugar 2.5 kg',            shelf:52.99,  coupon:0 },
+      { id:'bread',  name:'Brown bread 700 g',       shelf:19.49,  coupon:0 },
+      { id:'milk',   name:'Long-life milk 6 × 1 L',  shelf:104.99, coupon:0 },
+      { id:'chicken',name:'Chicken portions 2 kg',   shelf:94.99,  coupon:0 },
+      { id:'eggs',   name:'Eggs 18',                 shelf:54.99,  coupon:0 },
+      { id:'soap',   name:'Washing powder 2 kg',     shelf:112.99, coupon:10 },
+      { id:'tea',    name:'Rooibos tea 80s',         shelf:49.99,  coupon:4 },
+    ];
+    // Each store: price level vs. average, distance (km, one way), which items are on special (% off), loyalty % off.
+    const STORES = [
+      { id:'big',   name:'Big-box discounter',       km:6.5, level:0.98, loyalty:0.03, specials:{ maize:.15, oil:.20, soap:.18, chicken:.10 } },
+      { id:'super', name:'Neighbourhood supermarket', km:1.2, level:1.00, loyalty:0.06, specials:{ milk:.12, sugar:.10, eggs:.12 } },
+      { id:'spaza', name:'Spaza shop',               km:0.4, level:1.04, loyalty:0,    specials:{ bread:.08 } },
+    ];
+
+    const WALKABLE = 1.5; // km: close enough to walk, so no taxi needed
+    const state = { basket:new Set(ITEMS.map(i => i.id)), specials:true, loyalty:true, coupons:true, mode:'taxi', taxi:18, car:4.3, selected:null };
+    const R = n => 'R\u00A0' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+    const r2 = n => Math.round(n * 100) / 100;
+
+    // Basket checklist
+    const basketEl = document.getElementById('basket');
+    ITEMS.forEach(it => {
+      const li = document.createElement('li');
+      li.innerHTML = `<label class="flex items-center gap-3 rounded-xl border border-white/10 px-3 py-2.5 cursor-pointer transition hover:bg-white/5 has-[:checked]:border-emerald-glow/40 has-[:checked]:bg-emerald-glow/5">
+        <input type="checkbox" class="tick" value="${it.id}" checked /><span class="flex-1 text-white/85">${it.name}</span></label>`;
+      basketEl.appendChild(li);
+    });
+    basketEl.addEventListener('change', e => {
+      if (e.target.checked) state.basket.add(e.target.value); else state.basket.delete(e.target.value);
+      render();
+    });
+
+    // Toggles
+    [['optSpecials','specials'],['optLoyalty','loyalty'],['optCoupons','coupons']].forEach(([id,key]) =>
+      document.getElementById(id).addEventListener('change', e => { state[key] = e.target.checked; render(); }));
+
+    // Travel mode
+    document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+      state.mode = b.dataset.mode;
+      document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      document.getElementById('taxiCtl').classList.toggle('hidden', state.mode !== 'taxi');
+      document.getElementById('carCtl').classList.toggle('hidden', state.mode !== 'car');
+      document.getElementById('walkNote').classList.toggle('hidden', state.mode !== 'walk');
+      render();
+    }));
+    document.getElementById('taxiFare').addEventListener('input', e => { state.taxi = +e.target.value; render(); });
+    document.getElementById('carCost').addEventListener('input', e => { state.car = +e.target.value; render(); });
+
+    function price(store) {
+      let shelf = 0, specials = 0, loyalty = 0, coupons = 0;
+      ITEMS.filter(i => state.basket.has(i.id)).forEach(i => {
+        const s = r2(i.shelf * store.level);
+        shelf += s;
+        const sp = state.specials && store.specials[i.id] ? r2(s * store.specials[i.id]) : 0;
+        specials += sp;
+        // Loyalty prices apply to items not already on special
+        if (state.loyalty && store.loyalty && !sp) loyalty += r2(s * store.loyalty);
+        if (state.coupons && i.coupon && store.id !== 'spaza') coupons += i.coupon;
+      });
+      let trip = 0, tripLabel = 'Trip';
+      if (state.mode === 'taxi') {
+        trip = store.km <= WALKABLE ? 0 : state.taxi * 2;
+        tripLabel = store.km <= WALKABLE ? `Trip, ${store.km} km (walkable)` : `Taxi, ${store.km} km, there and back`;
+      } else if (state.mode === 'car') {
+        trip = r2(store.km * 2 * state.car);
+        tripLabel = `Car, ${(store.km * 2).toFixed(1)} km return`;
+      } else {
+        tripLabel = store.km > WALKABLE ? `Walk, ${store.km} km (long walk)` : `Walk, ${store.km} km`;
+      }
+      const final = r2(shelf - specials - loyalty - coupons + trip);
+      return { store, shelf:r2(shelf), specials:r2(specials), loyalty:r2(loyalty), coupons:r2(coupons), trip, tripLabel, final };
+    }
+
+    const rankEl = document.getElementById('ranking');
+    const cards = {};
+    STORES.forEach(s => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'rank-card glass absolute inset-x-0 rounded-2xl px-5 py-4 text-left flex items-center gap-4 hover:bg-white/[.07] focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-glow';
+      b.addEventListener('click', () => { state.selected = s.id; render(); });
+      rankEl.appendChild(b);
+      cards[s.id] = b;
+    });
+    const CARD_H = 84, GAP = 10;
+    rankEl.style.height = (STORES.length * CARD_H + (STORES.length - 1) * GAP) + 'px';
+
+    function render() {
+      document.getElementById('itemCount').textContent = `${state.basket.size} of ${ITEMS.length} items`;
+      document.getElementById('taxiOut').textContent = R(state.taxi);
+      document.getElementById('carOut').textContent = R(state.car) + ' / km';
+
+      const results = STORES.map(price).sort((a, b) => a.final - b.final);
+      const best = results[0], worst = results[results.length - 1];
+      results.forEach((res, i) => {
+        const c = cards[res.store.id];
+        const isBest = i === 0 && state.basket.size > 0;
+        const isSel = (state.selected || best.store.id) === res.store.id;
+        c.style.height = CARD_H + 'px';
+        c.style.transform = `translateY(${i * (CARD_H + GAP)}px)`;
+        c.style.borderColor = isSel ? 'rgba(0,240,255,.5)' : '';
+        c.setAttribute('aria-pressed', isSel);
+        c.innerHTML = `
+          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${isBest ? 'bg-emerald-glow text-midnight' : 'bg-white/10 text-white/70'}">${i + 1}</span>
+          <span class="min-w-0 flex-1">
+            <span class="block font-semibold truncate">${res.store.name}</span>
+            <span class="block text-xs text-white/50">${res.store.km} km away${isBest ? ' · <span class="text-emerald-glow font-semibold">Best plan: one trip</span>' : ` · ${R(r2(res.final - best.final))} more`}</span>
+          </span>
+          <span class="text-right">
+            <span class="block text-lg font-bold ${isBest ? 'text-emerald-glow' : ''}">${R(res.final)}</span>
+            <span class="block text-[11px] text-white/40">final price</span>
+          </span>`;
+      });
+
+      const sel = results.find(r => r.store.id === (state.selected || best.store.id));
+      document.getElementById('bdStore').textContent = sel.store.name;
+      const row = (label, val, cls = '') => `<div class="flex justify-between gap-4"><dt class="text-white/60">${label}</dt><dd class="font-semibold tabular-nums ${cls}">${val}</dd></div>`;
+      document.getElementById('breakdown').innerHTML =
+        row('Shelf price', R(sel.shelf)) +
+        row('Specials', sel.specials ? '−' + R(sel.specials) : R(0), sel.specials ? 'text-emerald-glow' : 'text-white/40') +
+        row('Loyalty-card prices', sel.loyalty ? '−' + R(sel.loyalty) : (sel.store.loyalty ? R(0) : 'No card scheme'), sel.loyalty ? 'text-emerald-glow' : 'text-white/40') +
+        row('Coupons', sel.coupons ? '−' + R(sel.coupons) : (sel.store.id === 'spaza' ? 'Not accepted' : R(0)), sel.coupons ? 'text-emerald-glow' : 'text-white/40') +
+        row(sel.tripLabel, sel.trip ? '+' + R(sel.trip) : R(0), sel.trip ? 'text-amber-300' : 'text-white/40');
+      document.getElementById('bdFinal').textContent = R(sel.final);
+    }
+    render();
+  </script>
+</body>
+</html>
