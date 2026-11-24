@@ -569,7 +569,10 @@
 
       submitBtn.disabled = true;
       try {
-        const res = await fetch('/', {
+        // On Netlify the built-in Forms service handles it; anywhere else
+        // (e.g. HostAfrica PHP hosting) contact.php sends it by email.
+        const endpoint = location.hostname.endsWith('netlify.app') ? '/' : 'contact.php';
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams(fd).toString(),
