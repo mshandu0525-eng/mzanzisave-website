@@ -1,0 +1,7 @@
+# MzanziSave website (Apache on HostAfrica / DirectAdmin)
+
+RewriteEngine On
+
+# Outlook asks for /autodiscover/autodiscover.xml (any letter case);
+# answer it with the PHP script that returns the mail settings.
+RewriteRule ^autodiscover/autodiscover\.xml$ autodiscover/autodiscover.php [NC,L]

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Email auto-configuration for Thunderbird, Apple Mail helpers and other clients -->
+<clientConfig version="1.1">
+  <emailProvider id="mzanzisave.co.za">
+    <domain>mzanzisave.co.za</domain>
+    <displayName>MzanziSave Mail</displayName>
+    <displayShortName>MzanziSave</displayShortName>
+    <incomingServer type="imap">
+      <hostname>mail.mzanzisave.co.za</hostname>
+      <port>993</port>
+      <socketType>SSL</socketType>
+      <authentication>password-cleartext</authentication>
+      <username>%EMAILADDRESS%</username>
+    </incomingServer>
+    <outgoingServer type="smtp">
+      <hostname>mail.mzanzisave.co.za</hostname>
+      <port>465</port>
+      <socketType>SSL</socketType>
+      <authentication>password-cleartext</authentication>
+      <username>%EMAILADDRESS%</username>
+    </outgoingServer>
+  </emailProvider>
+</clientConfig>
