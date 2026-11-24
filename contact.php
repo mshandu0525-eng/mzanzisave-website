@@ -6,9 +6,9 @@
  */
 
 // Where inquiries are delivered.
-const RECIPIENT = 'mshandu0525@gmail.com';
+const RECIPIENT = 'infor@mzanzisave.co.za';
 // Sender address on your own domain, so mail servers accept it.
-const SENDER    = 'website@mzanzisave.co.za';
+const SENDER    = 'infor@mzanzisave.co.za';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
